@@ -24,22 +24,22 @@ from lxml import etree
 # ---------------------------------------------------------------------------
 def hash_card_number(card_number: str) -> str:
     # rule: weak-crypto-md5
-    return hashlib.md5(card_number.encode()).hexdigest()
+    return hashlib.sha256(card_number.encode()).hexdigest()
 
 
 def legacy_transaction_checksum(payload: bytes) -> str:
     # rule: weak-crypto-sha1
-    return hashlib.sha1(payload).hexdigest()
+    return hashlib.sha256(payload).hexdigest()
 
 
 def generate_otp() -> str:
     # rule: weak-random-for-security (function name contains "otp")
-    return str(random.randint(100000, 999999))
+    return str(secrets.randbelow(900000) + 100000)
 
 
 def make_session_token() -> str:
     # rule: weak-random-for-security (function name contains "session")
-    return "".join(str(random.randint(0, 9)) for _ in range(32))
+    return "".join(str(secrets.randbelow(10) + 0) for _ in range(32))
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ def push_settlement_report(payload: dict):
 
 def configure_legacy_ssl_context(ctx):
     # rule: tls-context-check-hostname-disabled
-    ctx.check_hostname = False
+    ctx.check_hostname = True
     return ctx
 
 
@@ -124,7 +124,7 @@ def restore_cached_session(raw_bytes: bytes):
 
 def load_merchant_config(raw_yaml: str):
     # rule: insecure-yaml-load
-    return yaml.load(raw_yaml, Loader=yaml.UnsafeLoader)
+    return yaml.safe_load(raw_yaml)
 
 
 def parse_partner_xml_feed(xml_bytes: bytes):
@@ -136,14 +136,14 @@ def parse_partner_xml_feed(xml_bytes: bytes):
 # ---------------------------------------------------------------------------
 # Misconfiguration
 # ---------------------------------------------------------------------------
-DEBUG = True  # rule: debug-mode-enabled
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"  # rule: debug-mode-enabled
 
-CORS_ALLOWED_ORIGINS = ["*"]  # rule: cors-wildcard-origin
+CORS_ALLOWED_ORIGINS = ["https://yourdomain.example"]  # rule: cors-wildcard-origin
 
 SECRET_KEY = "django-insecure-payment-svc-do-not-ship-this"  # rule: hardcoded-django-secret-key
 
-SESSION_COOKIE_SECURE = False  # rule: insecure-cookie-flags
-CSRF_COOKIE_SECURE = False     # rule: insecure-cookie-flags
+SESSION_COOKIE_SECURE = True  # rule: insecure-cookie-flags
+CSRF_COOKIE_SECURE = True     # rule: insecure-cookie-flags
 
 DATABASES = {
     "default": {

@@ -48,7 +48,7 @@ def make_session_token() -> str:
 def fetch_exchange_rate(currency_pair: str):
     # rule: tls-verify-disabled
     url = f"https://rates.partner-bank.example/api/{currency_pair}"
-    return requests.get(url, verify=False)
+    return requests.get(url, verify=True)
 
 
 def push_settlement_report(payload: dict):
